@@ -266,6 +266,55 @@
     };
 
     let activeLyrics = [];
+    
+    
+// Silent Audio Carrier for keeping Mobile OS Audio Thread alive
+const bgCarrier = new Audio("https://raw.githubusercontent.com/anars/blank-audio/master/500-milliseconds-of-silence.mp3");
+bgCarrier.loop = true;
+
+function setupPlayerMediaSession() {
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentSong.title || "Playing Track",
+      artist: currentSong.artist || "Kuwal Artist",
+      album: "Kuwal Music",
+      artwork: [
+        { src: `https://i.ytimg.com/vi/${currentSong.ytId}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
+      ]
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (ytPlayer) {
+        ytPlayer.playVideo();
+        bgCarrier.play().catch(()=>{});
+      }
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (ytPlayer) {
+        ytPlayer.pauseVideo();
+        bgCarrier.pause();
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekbackward', () => seekRelative(-10));
+    navigator.mediaSession.setActionHandler('seekforward', () => seekRelative(10));
+    navigator.mediaSession.setActionHandler('previoustrack', () => prevSong());
+    navigator.mediaSession.setActionHandler('nexttrack', () => nextSong());
+  }
+}
+
+// Screen lock aur app minimize hone par music resume rakhna
+document.addEventListener("visibilitychange", () => {
+  if (isPlaying && ytPlayer) {
+    bgCarrier.play().catch(()=>{});
+    setTimeout(() => {
+      if (ytPlayer.getPlayerState && ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+        ytPlayer.playVideo();
+      }
+    }, 250);
+  }
+});
+
+    
 
     async function loadAutoMetadataAndLyrics() {
       // Auto Title & Artist if missing
@@ -328,6 +377,17 @@
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
         isPlaying = true;
+        
+                
+if (event.data === YT.PlayerState.PLAYING) {
+  isPlaying = true;
+  document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+  bgCarrier.play().catch(()=>{});
+  startTracking();
+}
+
+
+
         document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
         startTracking();
       } else if (event.data === YT.PlayerState.ENDED) {
@@ -363,6 +423,17 @@
       localStorage.setItem('activeSong', JSON.stringify(currentSong));
       localStorage.setItem('currentSongIndex', currentIndex);
       loadAutoMetadataAndLyrics();
+
+
+
+setupPlayerMediaSession();
+if (isPlaying) {
+  bgCarrier.play().catch(() => {});
+}
+
+
+
+      
       if (ytPlayer && ytPlayer.loadVideoById) {
         ytPlayer.loadVideoById(currentSong.ytId);
       }

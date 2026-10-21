@@ -291,6 +291,55 @@
     let currentSongIndex = 0;
     let isMiniPlaying = false;
     let homePlayer = null;
+    
+    
+    
+// Background Audio Holder (Lock screen aur app switch ke waqt play rakhne ke liye)
+const bgAudioCarrier = new Audio("https://raw.githubusercontent.com/anars/blank-audio/master/500-milliseconds-of-silence.mp3");
+bgAudioCarrier.loop = true;
+
+function setupMediaSession(song) {
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: song.title || 'Kuwal Music Track',
+      artist: song.artist || 'Kuwal Artist',
+      album: 'Kuwal Music',
+      artwork: [
+        { src: `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
+      ]
+    });
+
+    // Lock screen buttons support
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (homePlayer) {
+        homePlayer.playVideo();
+        bgAudioCarrier.play().catch(()=>{});
+      }
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (homePlayer) {
+        homePlayer.pauseVideo();
+        bgAudioCarrier.pause();
+      }
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', () => prevSong());
+    navigator.mediaSession.setActionHandler('nexttrack', () => nextSong());
+  }
+}
+
+// Screen lock ya tab change par auto-resume trigger
+document.addEventListener("visibilitychange", () => {
+  if (isMiniPlaying && homePlayer) {
+    bgAudioCarrier.play().catch(()=>{});
+    setTimeout(() => {
+      if (homePlayer.getPlayerState && homePlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+        homePlayer.playVideo();
+      }
+    }, 200);
+  }
+});
+
+    
 
     // Load saved database if present
     const savedDb = localStorage.getItem('customSongsDB');
@@ -482,6 +531,9 @@
       localStorage.setItem('currentSongIndex', index);
 
       updateMiniPlayer(song);
+      setupMediaSession(song);
+      bgAudioCarrier.play().catch(() => {});
+
 
       if (homePlayer && homePlayer.loadVideoById) {
         homePlayer.loadVideoById(song.ytId);
