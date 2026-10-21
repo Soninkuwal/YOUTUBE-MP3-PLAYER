@@ -233,9 +233,7 @@
       document.getElementById('toastMessage').innerText = message;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-    
-    
+    }    
 
     function closeDialog() { document.getElementById('customDialog').style.display = 'none'; }
     function openCustomDialog({ title, inputs = [], onConfirm }) {
@@ -274,8 +272,6 @@
 const bgCarrier = new Audio("https://raw.githubusercontent.com/anars/blank-audio/master/500-milliseconds-of-silence.mp3");
 bgCarrier.loop = true;
 
-bgCarrier.crossOrigin = "anonymous";
-
 function setupPlayerMediaSession() {
   if ('mediaSession' in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -308,14 +304,15 @@ function setupPlayerMediaSession() {
 
 // Screen lock aur app minimize hone par music resume rakhna
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && isPlaying && ytPlayer) {
+  if (isPlaying && ytPlayer) {
     bgCarrier.play().catch(()=>{});
     setTimeout(() => {
-      ytPlayer.playVideo();
-    }, 150);
+      if (ytPlayer.getPlayerState && ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+        ytPlayer.playVideo();
+      }
+    }, 250);
   }
 });
-
 
     
 
@@ -364,6 +361,8 @@ document.addEventListener("visibilitychange", () => {
       const track = document.getElementById('lyricsTrack');
       track.innerHTML = activeLyrics.map((l, i) => `<div class="lyric-line" id="lyric-${i}">${l.text}</div>`).join('');
     }
+    
+    
 
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('ytPlayerContainer', {
@@ -377,40 +376,32 @@ document.addEventListener("visibilitychange", () => {
       });
     }
 
-function onPlayerStateChange(event) {
-  if (event.data === YT.PlayerState.PLAYING) {
-    isPlaying = true;
-    document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
-    bgCarrier.play().catch(() => {});
-    startTracking();
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    // Agar screen lock ya minimize ki wajah se browser ne pause kiya hai toh resume karein
-    if (document.hidden && isPlaying) {
-      ytPlayer.playVideo();
-    } else {
-      isPlaying = false;
-      document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
-      clearInterval(timer);
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+        bgCarrier.play().catch(() => {});
+        startTracking();
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        if (document.hidden && isPlaying) {
+          ytPlayer.playVideo();
+        } else {
+          isPlaying = false;
+          document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+          clearInterval(timer);
+        }
+      } else if (event.data === YT.PlayerState.ENDED) {
+        nextSong();
+      }
     }
-  } else if (event.data === YT.PlayerState.ENDED) {
-    nextSong();
-  }
-}
-
-
-
-function togglePlayback() {
-  if (!ytPlayer) return;
-  if (isPlaying) ytPlayer.pauseVideo();
-  else ytPlayer.playVideo();
-}
-
 
     function togglePlayback() {
       if (!ytPlayer) return;
       if (isPlaying) ytPlayer.pauseVideo();
       else ytPlayer.playVideo();
     }
+    
+    
 
     function nextSong() {
       if (!playlistQueue.length) return;
