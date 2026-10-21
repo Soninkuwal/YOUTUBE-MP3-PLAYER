@@ -3,7 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Home - JioSaavn Style</title>
+  <title>Music Home - Kuwal Music</title>
+  <link rel="shortcut icon" href="logo.png">
+  
+<!-- SEO & Google Search Meta Tags -->
+<title>Kuwal Music - Listen to Free Music, Hits & Songs Online</title>
+<meta name="description" content="Kuwal Music par suniye latest trending songs, top artists, romantic tracks aur fresh hits. Enjoy uninterrupted streaming and online music player.">
+<meta name="keywords" content="Kuwal Music, free songs, online music player, hindi songs, trending music, top artists">
+<meta name="author" content="Kuwal Music">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph (Facebook, WhatsApp, Telegram Link Preview) -->
+<meta property="og:type" content="music.song">
+<meta property="og:site_name" content="Kuwal Music">
+<meta property="og:title" content="Kuwal Music - Free Music Streaming">
+<meta property="og:description" content="Stream the best songs, trending hits, and music playlists online.">
+<meta property="og:image" content="logo.png">
+<meta property="og:url" content="https://kuwal-music.pages.dev/">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kuwal Music - Free Online Songs">
+<meta name="twitter:description" content="Stream and play top songs seamlessly.">
+<meta name="twitter:image" content="logo.png">
+
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -99,6 +123,29 @@
       transition: all 0.3s ease; z-index: 9999;
     }
     .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    
+    
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.brand a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brand img {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+} 
+    
   </style>
 </head>
 <body>
@@ -110,11 +157,16 @@
   </div>
 
   <header>
-    <div class="brand"><i class="fa-brands fa-spotify"></i> JioSaavn</div>
-    <div class="header-icons">
-      <!-- <i class="fa-solid fa-shapes"></i> -->
-      <!-- <i class="fa-solid fa-bell"></i> -->
-    </div>
+    <div class="brand">
+  <a href="index.html" aria-label="Kuwal Music Home">
+    <img
+      src="logo.png"
+      alt="Kuwal Music Logo"
+      style="height:48px; width:48px; object-fit:contain;"
+    >
+  </a>
+  <span>Kuwal Music</span>
+</div>
   </header>
 
   <div class="search-section" id="searchBarWrapper">
@@ -179,6 +231,25 @@
     <div class="nav-item" id="navLibrary" onclick="switchTab('library')"><i class="fa-solid fa-user"></i><span>My Library</span></div>
     <!-- <div class="nav-item" id="navPro" onclick="switchTab('pro')"><i class="fa-solid fa-crown"></i><span>Pro</span></div> -->
   </nav>
+  
+  
+ <!-- Google Rich Snippet (Schema.org JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MusicWebSite",
+  "name": "Kuwal Music",
+  "url": "https://kuwal-music.pages.dev",
+  "description": "Kuwal Music provides high quality music streaming with trending hits and playlists.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://kuwal-music.pages.dev/?search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>  
+
+  
 
   <script>
     function showToast(message) {
@@ -191,7 +262,7 @@
     }
 
     const songsDatabase = [
-      { id: "B2KFkSkNllo", title: "Meri Maa", artist: "meena geet, k r Devta", type: "yt", ytId: "B2KFkSkNllo", category: "recent" },
+      { id: "B2KFkSkNllo", title: "", artist: "", type: "yt", ytId: "B2KFkSkNllo", category: "recent" },
       { id: "aBPIfN5fHO4", title: "Blank Space", artist: "Taylor Swift", type: "yt", ytId: "aBPIfN5fHO4", category: "recent" },
       { id: "fKopy74weus", title: "Girlfriend", artist: "Jass Manak - Age 19", type: "yt", ytId: "fKopy74weus", category: "fresh" },
       { id: "k4yXQkGLeAA", title: "Paaro", artist: "Aditya Rikhari", type: "yt", ytId: "k4yXQkGLeAA", category: "fresh" },
@@ -270,7 +341,7 @@
     }
 
     function openFullPlayer() {
-      window.location.href = 'player.html';
+      window.location.href = 'player1.html';
     }
 
     function playDirectUrl() {
@@ -287,7 +358,7 @@
       localStorage.setItem('activeSong', JSON.stringify(customSong));
       localStorage.setItem('playlist', JSON.stringify([customSong]));
       localStorage.setItem('currentSongIndex', 0);
-      window.location.href = 'player.html';
+      window.location.href = 'player1.html';
     }
 
     function extractYouTubeID(url) {

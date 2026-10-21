@@ -34,8 +34,8 @@
       --primary: #06b6d4;
       --bg: #0f172a;
       --card-bg: #1e293b;
-      --text-dark: #f8fafc;
-      --text-light: #94a3b8;
+      --text-dark: green;
+      --text-light: red;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; overflow-x: hidden; }
@@ -121,6 +121,37 @@
     .custom-dialog-actions button { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
     .btn-cancel { background: #475569; color: #fff; }
     .btn-confirm { background: var(--primary); color: #fff; }
+    
+    
+.kuwal-music-text {
+    font-size: 25px;
+    font-weight: 900;
+    font-family: 'Poppins', sans-serif;
+
+    background: linear-gradient(
+        90deg,
+        #ff1744,
+        #ff9100,
+        #ff1744
+    );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+
+    filter: drop-shadow(0 2px 5px rgba(255, 23, 68, 0.2));
+}
+
+@media (max-width: 480px) {
+    .kuwal-music-text {
+        font-size: 22px;
+    }
+}
+
+    
   </style>
 </head>
 <body>
@@ -140,7 +171,7 @@
 
   <div class="top-bar">
     <button class="icon-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-chevron-down"></i></button>
-    <div style="font-size:0.85rem; font-weight:600; color:var(--text-light);">Kuwal Music</div>
+    <div class="kuwal-music-text" style="font-size:0.85rem; font-weight:600; color:var(--text-light);">Kuwal Music</div>
     <button class="icon-btn" onclick="toggleMenu()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
   </div>
 
@@ -368,7 +399,7 @@ document.addEventListener("visibilitychange", () => {
       ytPlayer = new YT.Player('ytPlayerContainer', {
         height: '100%', width: '100%',
         videoId: currentSong.ytId,
-        playerVars: { 'autoplay': 1, 'playsinline': 1, 'controls': 0, 'rel': 0 },
+        playerVars: { 'autoplay': 1, 'playsinline': 0, 'controls': 0, 'rel': 0 },
         events: {
           'onReady': (e) => { e.target.unMute(); e.target.playVideo(); },
           'onStateChange': onPlayerStateChange

@@ -28,11 +28,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary: #f59e0b;
+      --primary: #06b6d4;
       --bg: #f8fafc;
       --card-bg: #ffffff;
-      --text: #0f172a;
-      --subtext: #64748b;
+      --text: green;
+      --subtext: red;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
@@ -91,8 +91,25 @@
     .playlist-info h4 { font-size: 1rem; color: #1e293b; }
     .playlist-info p { font-size: 0.8rem; color: var(--subtext); }
 
-    /* Detail / All Songs View */
+    /* Detail / All Songs View Header & Controls */
     #detailSectionView { display: none; padding: 16px; }
+    .detail-header-actions { display: flex; align-items: center; gap: 8px; }
+    .share-btn {
+      padding: 6px 14px;
+      background: #f1f5f9;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .share-btn:hover { background: #e2e8f0; }
+
     .song-list-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 0; border-bottom: 1px solid #e2e8f0; cursor: pointer;
@@ -132,7 +149,7 @@
     }
     .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* Hidden YouTube Player for Home Screen Background Play */
+    /* Hidden YouTube Player */
     #homeAudioFrameContainer {
       position: fixed;
       top: -9999px;
@@ -141,6 +158,24 @@
       height: 1px;
       opacity: 0;
       pointer-events: none;
+    }
+    
+    .brand span {
+        font-size: 25px;
+        font-weight: 900;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(90deg, #ff1744, #ff9100, #ff1744);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        filter: drop-shadow(0 2px 5px rgba(255, 23, 68, 0.2));
+    }
+
+    @media (max-width: 480px) {
+        .brand span { font-size: 22px; }
+        .detail-header-actions { flex-wrap: wrap; justify-content: flex-end; }
     }
   </style>
 </head>
@@ -157,7 +192,7 @@
 
   <header>
     <div class="brand">
-      <a href="index1.html" aria-label="Kuwal Music Home">
+      <a href="index.html" aria-label="Kuwal Music Home">
         <img src="logo.png" alt="Kuwal Music Logo" onerror="this.src='https://via.placeholder.com/48?text=KM'">
       </a>
       <span>Kuwal Music</span>
@@ -177,26 +212,30 @@
 
   <!-- Main View: Dynamic Categories & Artists -->
   <div id="contentSections">
-    <!-- Top Artists Section -->
     <div class="section-title">
       <span>Top Artists</span>
     </div>
     <div class="horizontal-scroll" id="artistList"></div>
 
-    <!-- Container where dynamic randomized categories will render -->
     <div id="categoriesContainer"></div>
   </div>
 
-  <!-- All Songs / Category / Artist Detail View -->
+  <!-- All Songs / Category / Artist / Playlist Detail View -->
   <div id="detailSectionView">
     <button onclick="closeDetailView()" style="border:none; background:none; color:var(--primary); font-weight:bold; margin-bottom:15px; cursor:pointer;">
       <i class="fa-solid fa-arrow-left"></i> Back to Home
     </button>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 id="detailTitle">Category Songs</h2>
-      <button onclick="playAllInDetail()" style="padding:6px 14px; background:var(--primary); color:#fff; border:none; border-radius:20px; font-weight:bold; cursor:pointer;">
-        <i class="fa-solid fa-play"></i> Play All
-      </button>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+      <h2 id="detailTitle" style="font-size:1.2rem; word-break:break-word;">Category Songs</h2>
+      <div class="detail-header-actions">
+        <button class="share-btn" onclick="shareCurrentDetail()">
+          <i class="fa-solid fa-share-nodes"></i> Share
+        </button>
+        <button onclick="playAllInDetail()" style="padding:6px 14px; background:var(--primary); color:#fff; border:none; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">
+          <i class="fa-solid fa-play"></i> Play All
+        </button>
+      </div>
     </div>
     <div id="detailSongsList" style="margin-top:15px;"></div>
   </div>
@@ -228,22 +267,22 @@
     <div class="nav-item active" id="navMusic" onclick="switchTab('music')"><i class="fa-solid fa-music"></i><span>Music</span></div>
     <div class="nav-item" id="navLibrary" onclick="switchTab('library')"><i class="fa-solid fa-user"></i><span>My Library</span></div>
   </nav>
+  
+  <script src="songs.js"></script>
 
   <script>
-    // Songs Database (Supports multiple categories in array)
-    let songsDatabase = [
-      { id: "B2KFkSkNllo", title: "", artist: "", type: "yt", ytId: "B2KFkSkNllo", categories: ["Recently Played", "Trending Hits"] },
-      { id: "aBPIfN5fHO4", title: "Blank Space", artist: "Taylor Swift", type: "yt", ytId: "aBPIfN5fHO4", categories: ["Recently Played", "English Pop"] },
-      { id: "fKopy74weus", title: "Girlfriend", artist: "Jass Manak", type: "yt", ytId: "fKopy74weus", categories: ["Fresh Hits", "Punjabi Vibes"] },
-      { id: "k4yXQkGLeAA", title: "Paaro", artist: "Aditya Rikhari", type: "yt", ytId: "k4yXQkGLeAA", categories: ["Fresh Hits", "Indie Melodies"] },
-      { id: "kJQP7kiw5Fk", title: "Despacito", artist: "Luis Fonsi", type: "yt", ytId: "kJQP7kiw5Fk", categories: ["Top Genres & Moods", "Trending Hits"] }
-    ];
+    let songsDatabase = window.songsDatabase || []; 
 
     let currentPlaylistSongs = [];
     let currentSongIndex = 0;
     let isMiniPlaying = false;
     let activeSong = null;
-    let ytIframePlayer = null;
+
+    // Current detail state tracking (for sharing)
+    let currentDetailContext = {
+      type: null, // 'category', 'artist', ya 'playlist'
+      name: null
+    };
 
     function showToast(message) {
       const toast = document.getElementById('customToast');
@@ -252,7 +291,6 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
-    // Auto-fetch missing title, artist & thumbnail via YouTube oEmbed
     async function autoFetchYouTubeDetails() {
       for (let song of songsDatabase) {
         if (!song.title || !song.artist) {
@@ -270,9 +308,9 @@
         }
       }
       renderAllComponents();
+      checkShareParamsOnLoad();
     }
 
-    // Shuffle Array for Random Category Positions on each load
     function shuffleArray(arr) {
       let shuffled = [...arr];
       for (let i = shuffled.length - 1; i > 0; i--) {
@@ -287,7 +325,6 @@
       renderCategories();
     }
 
-    // Dynamic Artist Generation
     function renderArtists() {
       const artistContainer = document.getElementById('artistList');
       artistContainer.innerHTML = '';
@@ -319,18 +356,15 @@
       });
     }
 
-    // Dynamic Category Sections with Shuffle Position
     function renderCategories() {
       const container = document.getElementById('categoriesContainer');
       container.innerHTML = '';
 
-      // Collect all unique categories
       const allCategoriesSet = new Set();
       songsDatabase.forEach(s => {
         (s.categories || []).forEach(cat => allCategoriesSet.add(cat));
       });
 
-      // Shuffle categories so every refresh alters position
       const categories = shuffleArray(Array.from(allCategoriesSet));
 
       categories.forEach(category => {
@@ -356,7 +390,6 @@
           const thumb = `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`;
           const songCard = document.createElement('div');
           songCard.className = 'song-card';
-          // Click to play directly on home page
           songCard.onclick = () => playSongOnHomePage(song, matchingSongs);
           songCard.innerHTML = `
             <div class="thumb-wrapper">
@@ -375,7 +408,6 @@
       });
     }
 
-    // Play song directly on Home Page
     function playSongOnHomePage(song, playlist = null) {
       activeSong = song;
       currentPlaylistSongs = playlist || songsDatabase;
@@ -417,7 +449,7 @@
         startHomePlayback(activeSong.ytId);
       } else {
         icon.className = "fa-solid fa-circle-play";
-        document.getElementById('homeAudioFrameContainer').innerHTML = ''; // Stop audio
+        document.getElementById('homeAudioFrameContainer').innerHTML = '';
       }
     }
 
@@ -433,7 +465,6 @@
       playSongOnHomePage(queue[currentSongIndex], queue);
     }
 
-    // Open standalone player.html
     function openPlayerPage(song = null) {
       if (song) {
         localStorage.setItem('activeSong', JSON.stringify(song));
@@ -441,16 +472,23 @@
       window.location.href = 'player.html';
     }
 
-    // Category Detail View with All Songs
     function openCategoryDetail(categoryName) {
+      currentDetailContext = { type: 'category', name: categoryName };
       const songs = songsDatabase.filter(s => s.categories && s.categories.includes(categoryName));
       showDetailedList(categoryName, songs);
     }
 
-    // Artist Detail View with All Songs
     function openArtistDetail(artistName) {
+      currentDetailContext = { type: 'artist', name: artistName };
       const songs = songsDatabase.filter(s => s.artist === artistName);
       showDetailedList(`Artist: ${artistName}`, songs);
+    }
+
+    function openPlaylistDetail(playlistName) {
+      currentDetailContext = { type: 'playlist', name: playlistName };
+      const playlists = JSON.parse(localStorage.getItem('myPlaylists')) || {};
+      const songs = playlists[playlistName] || [];
+      showDetailedList(`Playlist: ${playlistName}`, songs);
     }
 
     let activeDetailSongs = [];
@@ -466,14 +504,13 @@
       listContainer.innerHTML = '';
 
       if (songs.length === 0) {
-        listContainer.innerHTML = '<p style="color:var(--subtext)">No songs found.</p>';
+        listContainer.innerHTML = '<p style="color:var(--subtext); padding:10px 0;">No songs found.</p>';
         return;
       }
 
       songs.forEach((song, idx) => {
         const item = document.createElement('div');
         item.className = 'song-list-item';
-        // Clicking specific song redirects to player.html as requested
         item.onclick = () => {
           localStorage.setItem('activeSong', JSON.stringify(song));
           localStorage.setItem('playlist', JSON.stringify(songs));
@@ -497,7 +534,6 @@
 
     function playAllInDetail() {
       if (activeDetailSongs.length > 0) {
-        // Play whole playlist and redirect to player.html
         localStorage.setItem('activeSong', JSON.stringify(activeDetailSongs[0]));
         localStorage.setItem('playlist', JSON.stringify(activeDetailSongs));
         localStorage.setItem('currentSongIndex', 0);
@@ -506,12 +542,83 @@
     }
 
     function closeDetailView() {
+      currentDetailContext = { type: null, name: null };
+      // URL clean up agar shared query parameter laga ho
+      window.history.replaceState({}, document.title, window.location.pathname);
       document.getElementById('detailSectionView').style.display = 'none';
       document.getElementById('contentSections').style.display = 'block';
       document.getElementById('searchBarWrapper').style.display = 'block';
     }
 
-    // Adding dynamic category/song
+    // Stylish Share Function with Web Share API & Clipboard Fallback
+    async function shareCurrentDetail() {
+      if (!currentDetailContext.type || !currentDetailContext.name) return;
+
+      const type = currentDetailContext.type;
+      const name = currentDetailContext.name;
+      
+      // Dynamic Shareable URL
+      const shareUrl = `${window.location.origin}${window.location.pathname}?type=${encodeURIComponent(type)}&name=${encodeURIComponent(name)}`;
+      
+      let typeLabel = "Category";
+      let icon = "🎵";
+      if (type === 'artist') { typeLabel = "Artist"; icon = "🎙️"; }
+      if (type === 'playlist') { typeLabel = "Playlist"; icon = "📑"; }
+
+      // Stylized Share Text Template
+      const stylishText = 
+`✨ *Kuwal Music Free Online* ✨
+
+${icon} Check out this amazing ${typeLabel}: 
+*${name}*!
+
+🎧 Enjoy high-quality streaming on *Kuwal Music*.
+
+👇👇 Click to listen now 👇👇:
+
+`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${name} - Kuwal Music`,
+            text: stylishText,
+            url: shareUrl
+          });
+          showToast('Shared successfully!');
+        } catch (err) {
+          if (err.name !== 'AbortError') copyToClipboard(shareUrl);
+        }
+      } else {
+        copyToClipboard(shareUrl);
+      }
+    }
+
+    function copyToClipboard(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Share link copied to clipboard!');
+      }).catch(() => {
+        showToast('Link: ' + url);
+      });
+    }
+
+    // Auto open when shared URL is opened by another user
+    function checkShareParamsOnLoad() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get('type');
+      const name = urlParams.get('name');
+
+      if (type && name) {
+        if (type === 'category') {
+          openCategoryDetail(name);
+        } else if (type === 'artist') {
+          openArtistDetail(name);
+        } else if (type === 'playlist') {
+          openPlaylistDetail(name);
+        }
+      }
+    }
+
     function addNewSongWithCategory(ytId, categories = ["New Arrivals"]) {
       const newSong = { id: ytId, ytId: ytId, title: "", artist: "", categories: categories };
       songsDatabase.push(newSong);
@@ -582,7 +689,7 @@
       names.forEach(name => {
         const count = playlists[name].length;
         container.innerHTML += `
-          <div class="playlist-item" onclick="showDetailedList('${name}', JSON.parse(localStorage.getItem('myPlaylists'))['${name}'])">
+          <div class="playlist-item" onclick="openPlaylistDetail('${name}')">
             <div class="playlist-info">
               <h4><i class="fa-solid fa-list-music" style="color:var(--primary); margin-right:8px;"></i> ${name}</h4>
               <p>${count} Songs</p>
