@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Now Playing</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: gold;
+      --bg: #f8fafc;
+      --text-dark: green;
+      --text-light: red;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; overflow-x: hidden; }
+
+    /* Top Bar */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; height: 48px; }
+    .icon-btn { font-size: 1.3rem; color: #334155; cursor: pointer; border: none; background: none; }
+
+    /* Media Stage (Default Video Embed Front) */
+    .media-container {
+      width: 100%; max-width: 380px; aspect-ratio: 1/1; margin: 15px auto;
+      border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      position: relative; background: #000;
+    }
+    .media-container img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .media-container iframe { width: 100%; height: 100%; border: none; }
+    .video-badge {
+      position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6);
+      color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem;
+      cursor: pointer; display: flex; align-items: center; gap: 5px; z-index: 5;
+    }
+
+    /* Lyrics Display */
+    .lyrics-container {
+      background: #ffffff; border-radius: 12px; padding: 14px;
+      margin: 10px auto; width: 100%; max-width: 380px; max-height: 85px;
+      overflow: hidden; text-align: center; border: 1px solid #e2e8f0; position: relative;
+    }
+    .lyrics-header { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .lyrics-viewport { height: 40px; overflow: hidden; position: relative; }
+    .lyrics-track { transition: transform 0.4s ease-out; display: flex; flex-direction: column; gap: 8px; }
+    .lyric-line { font-size: 0.88rem; color: var(--text-light); transition: color 0.3s; }
+    .lyric-line.active { color: var(--primary); font-weight: bold; font-size: 0.95rem; }
+
+    /* Song Title Bar */
+    .song-details { width: 100%; max-width: 380px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .song-meta h2 { font-size: 1.25rem; font-weight: 700; }
+    .song-meta p { font-size: 0.85rem; color: var(--text-light); }
+
+    /* Progress Bar */
+    .progress-section { width: 100%; max-width: 380px; margin: 15px auto 0; }
+    .progress-bar-wrap { width: 100%; height: 5px; background: #cbd5e1; border-radius: 3px; position: relative; cursor: pointer; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; width: 0%; position: relative; }
+    .progress-fill::after {
+      content: ""; position: absolute; right: -6px; top: -4px; width: 13px; height: 13px;
+      border-radius: 50%; background: var(--primary); box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    }
+    .time-stamps { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-light); margin-top: 6px; }
+
+    /* Player Controls */
+    .main-controls { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 380px; margin: 15px auto; }
+    .play-pause-btn {
+      width: 65px; height: 65px; border-radius: 50%; background: #1e293b;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; cursor: pointer; border: none;
+    }
+
+    /* Modals (Menu & Playlist View) */
+    .menu-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none;
+      align-items: flex-end; z-index: 999;
+    }
+    .menu-content {
+      background: #fff; width: 100%; border-radius: 20px 20px 0 0;
+      padding: 20px; max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f1f5f9; font-weight: 500; cursor: pointer; }
+    .menu-item i { color: var(--primary); width: 20px; font-size: 1.1rem; }
+
+    .queue-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Custom Toast Popup */
+    .custom-toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px);
+      background: #1e293b; color: #fff; padding: 12px 22px; border-radius: 30px;
+      font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25); opacity: 0; pointer-events: none;
+      transition: all 0.3s ease; z-index: 99999;
+    }
+    .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Custom Input / Dialog Modal */
+    .custom-dialog-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
+      align-items: center; justify-content: center; z-index: 10000; padding: 20px;
+    }
+    .custom-dialog-card {
+      background: #ffffff; border-radius: 16px; width: 100%; max-width: 340px;
+      padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: scaleUp 0.25s ease;
+    }
+    @keyframes scaleUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    .custom-dialog-card h3 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .custom-dialog-card input {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px;
+      outline: none; font-size: 0.9rem; margin-bottom: 10px;
+    }
+    .custom-dialog-card input:focus { border-color: var(--primary); }
+    .custom-dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; }
+    .custom-dialog-actions button {
+      padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none;
+    }
+    .btn-cancel { background: #e2e8f0; color: #475569; }
+    .btn-confirm { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Alert Toast -->
+  <div class="custom-toast" id="customToast">
+    <i class="fa-solid fa-circle-check" style="color:var(--primary);"></i>
+    <span id="toastMessage">Notification</span>
+  </div>
+
+  <!-- Custom Dialog Modal (Replaces prompt & alert) -->
+  <div class="custom-dialog-backdrop" id="customDialog">
+    <div class="custom-dialog-card">
+      <h3 id="dialogTitle"><i class="fa-solid fa-music" style="color:var(--primary);"></i> Details</h3>
+      <div id="dialogInputs"></div>
+      <div class="custom-dialog-actions">
+        <button class="btn-cancel" id="dialogCancelBtn" onclick="closeDialog()">Cancel</button>
+        <button class="btn-confirm" id="dialogConfirmBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button class="icon-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-xmark"></i></button>
+    <button class="icon-btn" onclick="toggleMenu()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+  </div>
+
+  <!-- Media Stage (Auto Video Front Play) -->
+  <div class="media-container" id="mediaContainer">
+    <img id="trackThumb" src="" alt="Song Cover">
+    <div id="ytPlayerContainer" style="width:100%; height:100%;"></div>
+    <div class="video-badge" onclick="toggleVideoAudioMode()">
+      <i class="fa-solid fa-video" id="modeIcon"></i> <span id="modeText">Audio Only</span>
+    </div>
+  </div>
+
+  <!-- Lyrics -->
+  <div class="lyrics-container" id="lyricsBox">
+    <div class="lyrics-header">
+      <span>Lyrics</span>
+      <span onclick="toggleLyricsVisibility()" style="cursor:pointer;" id="lyricsToggleText">Hide</span>
+    </div>
+    <div class="lyrics-viewport" id="lyricsViewport">
+      <div class="lyrics-track" id="lyricsTrack"></div>
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="song-details">
+    <div class="song-meta">
+      <h2 id="songTitle">Loading Song...</h2>
+      <p id="songArtist">Artist</p>
+    </div>
+    <button class="icon-btn" onclick="toggleMenu()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-section">
+    <div class="progress-bar-wrap" id="progressBarWrap" onclick="seekSong(event)">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="time-stamps">
+      <span id="currentTime">00:00</span>
+      <span id="duration">00:00</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="main-controls">
+    <button class="icon-btn" onclick="seekRelative(-10)"><i class="fa-solid fa-rotate-left"></i> 10s</button>
+    <button class="icon-btn" onclick="prevSong()"><i class="fa-solid fa-backward-step fa-xl"></i></button>
+    <button class="play-pause-btn" id="playBtn" onclick="togglePlayback()"><i class="fa-solid fa-play"></i></button>
+    <button class="icon-btn" onclick="nextSong()"><i class="fa-solid fa-forward-step fa-xl"></i></button>
+    <button class="icon-btn" onclick="seekRelative(10)">10s <i class="fa-solid fa-rotate-right"></i></button>
+  </div>
+
+  <!-- 3 Dots Options Modal -->
+  <div class="menu-modal" id="menuModal" onclick="toggleMenu()">
+    <div class="menu-content" onclick="event.stopPropagation()">
+      <div class="menu-item" onclick="showQueueModal();"><i class="fa-solid fa-list"></i> View All Songs / Queue</div>
+      <div class="menu-item" onclick="createOrAddToPlaylist();"><i class="fa-solid fa-list-plus"></i> Add Current Song to Playlist</div>
+      <div class="menu-item" onclick="toggleVideoAudioMode(); toggleMenu();"><i class="fa-solid fa-film"></i> <span id="menuModeText">Switch to Audio</span></div>
+      <div class="menu-item" onclick="showSongDetails(); toggleMenu();"><i class="fa-solid fa-circle-info"></i> Song Details</div>
+    </div>
+  </div>
+
+  <!-- Queue / Playlist Song Management Modal -->
+  <div class="menu-modal" id="queueModal" onclick="toggleQueueModal()">
+    <div class="menu-content" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3>Current Playing List</h3>
+        <button onclick="addNewCustomSong()" style="padding:6px 12px; background:var(--primary); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;"><i class="fa-solid fa-plus"></i> Add Song</button>
+      </div>
+      <div id="queueSongList"></div>
+    </div>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    /* Custom UI Notification & Modal Helpers */
+    function showToast(message) {
+      const toast = document.getElementById('customToast');
+      document.getElementById('toastMessage').innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function closeDialog() {
+      document.getElementById('customDialog').style.display = 'none';
+    }
+
+    function openCustomDialog({ title, inputs = [], isAlert = false, onConfirm }) {
+      const dialog = document.getElementById('customDialog');
+      const titleEl = document.getElementById('dialogTitle');
+      const inputContainer = document.getElementById('dialogInputs');
+      const cancelBtn = document.getElementById('dialogCancelBtn');
+      const confirmBtn = document.getElementById('dialogConfirmBtn');
+
+      titleEl.innerHTML = title;
+      inputContainer.innerHTML = '';
+      cancelBtn.style.display = isAlert ? 'none' : 'inline-block';
+
+      inputs.forEach(inp => {
+        const inputElem = document.createElement('input');
+        inputElem.type = inp.type || 'text';
+        inputElem.placeholder = inp.placeholder || '';
+        inputElem.id = inp.id;
+        inputContainer.appendChild(inputElem);
+      });
+
+      confirmBtn.onclick = () => {
+        const values = inputs.map(inp => document.getElementById(inp.id).value.trim());
+        closeDialog();
+        if (onConfirm) onConfirm(values);
+      };
+
+      dialog.style.display = 'flex';
+      if (inputs.length > 0) {
+        setTimeout(() => document.getElementById(inputs[0].id).focus(), 50);
+      }
+    }
+
+    let ytPlayer = null;
+    let isVideoMode = true;
+    let isPlaying = false;
+    let timer = null;
+
+    let playlistQueue = JSON.parse(localStorage.getItem('playlist')) || [];
+    let currentIndex = parseInt(localStorage.getItem('currentSongIndex')) || 0;
+    let currentSong = JSON.parse(localStorage.getItem('activeSong')) || playlistQueue[0] || {
+      id: "B2KFkSkNllo",
+      title: "Meri Maa",
+      artist: "Pritam, KK - Yaariyan",
+      ytId: "B2KFkSkNllo"
+    };
+
+    const lyricsData = [
+      { time: 0, text: "♪ (Music Playing) ♪" },
+      { time: 5, text: "Maa mujhe apne aanchal me chupa le" },
+      { time: 12, text: "Gale se mujhe apne laga le" },
+      { time: 20, text: "Tere bina mera koi nahi yahan" },
+      { time: 30, text: "Meri pyaari maa..." },
+      { time: 45, text: "♪ (Interlude) ♪" }
+    ];
+
+    function initUI() {
+      document.getElementById('songTitle').innerText = currentSong.title;
+      document.getElementById('songArtist').innerText = currentSong.artist;
+      document.getElementById('trackThumb').src = `https://i.ytimg.com/vi/${currentSong.ytId}/hqdefault.jpg`;
+      
+      const track = document.getElementById('lyricsTrack');
+      track.innerHTML = lyricsData.map((l, i) => `<div class="lyric-line" id="lyric-${i}">${l.text}</div>`).join('');
+    }
+
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('ytPlayerContainer', {
+        height: '100%',
+        width: '100%',
+        videoId: currentSong.ytId,
+        playerVars: {
+          'autoplay': 0,
+          'playsinline': 0,
+          'controls': 0,
+          'rel': 0
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      event.target.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+        startTracking();
+      } else if (event.data === YT.PlayerState.ENDED) {
+        nextSong();
+      } else {
+        isPlaying = false;
+        document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+        clearInterval(timer);
+      }
+    }
+
+    function togglePlayback() {
+      if (!ytPlayer) return;
+      if (isPlaying) {
+        ytPlayer.pauseVideo();
+      } else {
+        ytPlayer.playVideo();
+      }
+    }
+
+    function nextSong() {
+      if (!playlistQueue.length) return;
+      currentIndex = (currentIndex + 1) % playlistQueue.length;
+      switchCurrentSong(currentIndex);
+    }
+
+    function prevSong() {
+      if (!playlistQueue.length) return;
+      currentIndex = (currentIndex - 1 + playlistQueue.length) % playlistQueue.length;
+      switchCurrentSong(currentIndex);
+    }
+
+    function switchCurrentSong(index) {
+      currentIndex = index;
+      currentSong = playlistQueue[currentIndex];
+      localStorage.setItem('activeSong', JSON.stringify(currentSong));
+      localStorage.setItem('currentSongIndex', currentIndex);
+      initUI();
+
+      if (ytPlayer && ytPlayer.loadVideoById) {
+        ytPlayer.loadVideoById(currentSong.ytId);
+      }
+    }
+
+    function seekRelative(offset) {
+      if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+      const cur = ytPlayer.getCurrentTime();
+      ytPlayer.seekTo(cur + offset, true);
+    }
+
+    function seekSong(event) {
+      if (!ytPlayer || !ytPlayer.getDuration) return;
+      const wrap = document.getElementById('progressBarWrap');
+      const rect = wrap.getBoundingClientRect();
+      const clickPos = (event.clientX - rect.left) / rect.width;
+      const duration = ytPlayer.getDuration();
+      ytPlayer.seekTo(clickPos * duration, true);
+    }
+
+    function startTracking() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+        const cur = ytPlayer.getCurrentTime();
+        const dur = ytPlayer.getDuration() || 1;
+        
+        const pct = (cur / dur) * 100;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('currentTime').innerText = formatTime(cur);
+        document.getElementById('duration').innerText = formatTime(dur);
+
+        syncLyrics(cur);
+      }, 500);
+    }
+
+    function syncLyrics(currentTime) {
+      let activeIndex = 0;
+      for (let i = 0; i < lyricsData.length; i++) {
+        if (currentTime >= lyricsData[i].time) activeIndex = i;
+      }
+      document.querySelectorAll('.lyric-line').forEach((el, idx) => {
+        el.classList.toggle('active', idx === activeIndex);
+      });
+      const offset = activeIndex * -24;
+      document.getElementById('lyricsTrack').style.transform = `translateY(${offset}px)`;
+    }
+
+    function toggleVideoAudioMode() {
+      isVideoMode = !isVideoMode;
+      const img = document.getElementById('trackThumb');
+      const ytBox = document.getElementById('ytPlayerContainer');
+      const modeText = document.getElementById('modeText');
+      const menuModeText = document.getElementById('menuModeText');
+
+      if (isVideoMode) {
+        img.style.display = 'none';
+        ytBox.style.display = 'block';
+        modeText.innerText = "Audio Only";
+        menuModeText.innerText = "Switch to Audio";
+      } else {
+        img.style.display = 'block';
+        ytBox.style.display = 'none';
+        modeText.innerText = "Play Video";
+        menuModeText.innerText = "Play as Video";
+      }
+    }
+
+    function toggleLyricsVisibility() {
+      const vp = document.getElementById('lyricsViewport');
+      const btn = document.getElementById('lyricsToggleText');
+      if (vp.style.display === 'none') {
+        vp.style.display = 'block';
+        btn.innerText = 'Hide';
+      } else {
+        vp.style.display = 'none';
+        btn.innerText = 'Show';
+      }
+    }
+
+    function toggleMenu() {
+      const modal = document.getElementById('menuModal');
+      modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function toggleQueueModal() {
+      const modal = document.getElementById('queueModal');
+      modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function showQueueModal() {
+      toggleMenu();
+      renderQueueSongs();
+      toggleQueueModal();
+    }
+
+    function renderQueueSongs() {
+      const list = document.getElementById('queueSongList');
+      list.innerHTML = '';
+      if (playlistQueue.length === 0) {
+        list.innerHTML = '<p style="color:#64748b;">No songs in queue.</p>';
+        return;
+      }
+
+      playlistQueue.forEach((song, idx) => {
+        list.innerHTML += `
+          <div class="queue-item">
+            <div style="cursor:pointer; flex:1;" onclick="playQueueSong(${idx})">
+              <strong style="${idx === currentIndex ? 'color:var(--primary);' : ''}">${song.title}</strong>
+              <div style="font-size:0.75rem; color:#64748b;">${song.artist}</div>
+            </div>
+            <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="removeSongFromQueue(${idx})"></i>
+          </div>
+        `;
+      });
+    }
+
+    function playQueueSong(idx) {
+      toggleQueueModal();
+      switchCurrentSong(idx);
+      }
+
+    function removeSongFromQueue(idx) {
+      if (playlistQueue.length <= 1) {
+        showToast("Cannot remove the last song.");
+        return;
+      }
+      playlistQueue.splice(idx, 1);
+      localStorage.setItem('playlist', JSON.stringify(playlistQueue));
+      if (idx === currentIndex) {
+        currentIndex = 0;
+        switchCurrentSong(currentIndex);
+      } else if (idx < currentIndex) {
+        currentIndex--;
+        localStorage.setItem('currentSongIndex', currentIndex);
+      }
+      renderQueueSongs();
+    }
+
+    function addNewCustomSong() {
+      openCustomDialog({
+        title: '<i class="fa-solid fa-plus-circle" style="color:var(--primary);"></i> Add New Song',
+        inputs: [
+          { id: 'customSongTitle', placeholder: 'Enter Song Name' },
+          { id: 'customSongUrl', placeholder: 'YouTube URL or Video ID' }
+        ],
+        onConfirm: ([title, ytUrl]) => {
+          if (!title || !ytUrl) {
+            showToast("Please fill all details!");
+            return;
+          }
+          const ytId = extractYouTubeID(ytUrl) || ytUrl;
+          const newSong = { id: ytId, title: title, artist: "Custom Track", type: "yt", ytId: ytId };
+
+          playlistQueue.push(newSong);
+          localStorage.setItem('playlist', JSON.stringify(playlistQueue));
+          renderQueueSongs();
+          showToast("Song added to queue!");
+        }
+      });
+    }
+
+    function createOrAddToPlaylist() {
+      toggleMenu();
+      openCustomDialog({
+        title: '<i class="fa-solid fa-folder-plus" style="color:var(--primary);"></i> Save to Playlist',
+        inputs: [
+          { id: 'playlistNameInput', placeholder: 'Playlist Name (e.g. Chill, Hits)' }
+        ],
+        onConfirm: ([name]) => {
+          if (!name) return;
+          let playlists = JSON.parse(localStorage.getItem('myPlaylists')) || {};
+          if (!playlists[name]) playlists[name] = [];
+
+          const exists = playlists[name].some(s => s.ytId === currentSong.ytId);
+          if (!exists) {
+            playlists[name].push(currentSong);
+            localStorage.setItem('myPlaylists', JSON.stringify(playlists));
+            showToast(`Added to "${name}" playlist!`);
+          } else {
+            showToast("Song already in this playlist!");
+          }
+        }
+      });
+    }
+
+    function showSongDetails() {
+      openCustomDialog({
+        title: '<i class="fa-solid fa-circle-info" style="color:var(--primary);"></i> Song Details',
+        isAlert: true,
+        inputs: [],
+        onConfirm: () => {}
+      });
+      document.getElementById('dialogInputs').innerHTML = `
+        <div style="font-size:0.9rem; line-height:1.6; color:#334155;">
+          <p><strong>Title:</strong> ${currentSong.title}</p>
+          <p><strong>Artist:</strong> ${currentSong.artist}</p>
+          <p><strong>Type:</strong> ${currentSong.type.toUpperCase()}</p>
+        </div>
+      `;
+    }
+
+    function extractYouTubeID(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    window.onload = initUI;
+  </script>
+</body>
+</html>
+  

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Home - Kuwal Music</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #06b6d4;
+      --primary-hover: #0891b2;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --subtext: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
+    
+    header {
+      position: sticky; top: 0; background: #fff; z-index: 10;
+      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .brand { font-size: 1.25rem; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
+    .brand i { color: var(--primary); }
+
+    .search-section { padding: 16px; background: #fff; border-bottom: 1px solid #edf2f7; }
+    .search-box {
+      display: flex; align-items: center; background: #f1f5f9;
+      border-radius: 25px; padding: 8px 16px; gap: 10px;
+    }
+    .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.95rem; }
+    
+    .direct-input-box { margin-top: 10px; display: flex; gap: 8px; }
+    .direct-input-box input { flex: 1; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; outline: none; }
+    .direct-input-box button { background: var(--primary); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+    .section-title { font-size: 1.15rem; font-weight: 700; padding: 18px 16px 8px; display: flex; justify-content: space-between; align-items: center; }
+    .view-all-btn { font-size: 0.8rem; color: var(--primary); background: none; border: none; cursor: pointer; font-weight: 600; }
+    .horizontal-scroll { display: flex; overflow-x: auto; gap: 14px; padding: 0 16px 12px; scrollbar-width: none; }
+    .horizontal-scroll::-webkit-scrollbar { display: none; }
+    
+    .song-card { min-width: 130px; max-width: 130px; position: relative; cursor: pointer; flex-shrink: 0; }
+    .thumb-wrapper { position: relative; width: 130px; height: 130px; border-radius: 12px; overflow: hidden; background: #e2e8f0; }
+    .thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-wrapper .play-overlay {
+      position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7);
+      color: #fff; width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+    }
+    .song-title { font-size: 0.85rem; font-weight: 600; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .song-artist { font-size: 0.75rem; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Artist Circular Card */
+    .artist-card { display: flex; flex-direction: column; align-items: center; min-width: 90px; cursor: pointer; }
+    .artist-avatar { width: 75px; height: 75px; border-radius: 50%; overflow: hidden; background: #e2e8f0; border: 2px solid var(--primary); }
+    .artist-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .artist-name { font-size: 0.8rem; font-weight: 600; margin-top: 6px; text-align: center; max-width: 85px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Modal / Full View for Category & Artist Details */
+    .detail-overlay {
+      position: fixed; inset: 0; background: #fff; z-index: 1000; display: none;
+      flex-direction: column; overflow-y: auto; padding: 16px 16px 90px 16px;
+    }
+    .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .detail-back-btn { background: none; border: none; font-size: 1.1rem; color: var(--primary); cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+    .play-all-btn { background: var(--primary); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+    .song-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer;
+    }
+    .song-row-left { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+    .song-row-left img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .song-row-text { overflow: hidden; }
+    .song-row-text h4 { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-row-text p { font-size: 0.75rem; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Library Screen */
+    #librarySection { display: none; padding: 16px; }
+    .playlist-item {
+      background: #fff; padding: 14px; border-radius: 12px; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: pointer;
+    }
+    .playlist-info h4 { font-size: 1rem; color: #1e293b; }
+    .playlist-info p { font-size: 0.8rem; color: var(--subtext); }
+
+    /* Mini Player */
+    .mini-player {
+      position: fixed; bottom: 58px; left: 0; right: 0; background: #0f172a;
+      color: #fff; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; z-index: 99; cursor: pointer;
+    }
+    .mini-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .mini-info img { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; }
+    .mini-text { overflow: hidden; }
+    .mini-text h4 { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-text p { font-size: 0.7rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-controls { display: flex; gap: 16px; font-size: 1.2rem; align-items: center; }
+
+    /* Hidden YouTube Home Player */
+    #homeYtWrapper { position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: #fff; height: 58px;
+      display: flex; border-top: 1px solid #e2e8f0; z-index: 100;
+    }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--subtext); text-decoration: none; gap: 3px; cursor: pointer; }
+    .nav-item.active { color: var(--primary); font-weight: 600; }
+    .nav-item i { font-size: 1rem; }
+
+    /* Toast */
+    .custom-toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px);
+      background: #1e293b; color: #fff; padding: 12px 22px; border-radius: 30px;
+      font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25); opacity: 0; pointer-events: none;
+      transition: all 0.3s ease; z-index: 9999;
+    }
+    .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden YT Player for Home Audio/Video Play -->
+  <div id="homeYtWrapper"><div id="homeYtPlayer"></div></div>
+
+  <div class="custom-toast" id="customToast">
+    <i class="fa-solid fa-circle-info" style="color:var(--primary);"></i>
+    <span id="toastMessage">Notification</span>
+  </div>
+
+  <header>
+    <div class="brand"><i class="fa-solid fa-play"></i>Kuwal Music</div>
+  </header>
+
+  <div class="search-section" id="searchBarWrapper">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
+      <input type="text" id="searchInput" placeholder="Search song or artist..." oninput="handleSearch()">
+    </div>
+    <div class="direct-input-box">
+      <input type="text" id="directUrl" placeholder="Paste YouTube Video ID / Link">
+      <button onclick="playDirectUrl()"><i class="fa-solid fa-play"></i> Play</button>
+    </div>
+  </div>
+
+  <!-- Music Home View -->
+  <div id="contentSections">
+    <!-- Artists Profiles Auto Section -->
+    <div class="section-title"><span>Top Artists</span></div>
+    <div class="horizontal-scroll" id="artistsList"></div>
+
+    <!-- Dynamic Category Sections Rendered Here -->
+    <div id="dynamicCategoriesContainer"></div>
+  </div>
+
+  <!-- Shared Full Detail View for Category / Artist "All" -->
+  <div class="detail-overlay" id="detailOverlay">
+    <div class="detail-header">
+      <button class="detail-back-btn" onclick="closeDetailOverlay()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <button class="play-all-btn" onclick="playCurrentDetailList()"><i class="fa-solid fa-play"></i> Play All</button>
+    </div>
+    <h2 id="detailViewTitle" style="margin-bottom:12px;">Category Name</h2>
+    <div id="detailSongsContainer"></div>
+  </div>
+
+  <!-- My Library View -->
+  <div id="librarySection">
+    <h2 style="margin-bottom:14px;">My Playlists</h2>
+    <div id="allPlaylistsContainer"></div>
+  </div>
+
+  <!-- Mini Player -->
+  <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
+    <div class="mini-info">
+      <img id="miniThumb" src="" alt="Thumb">
+      <div class="mini-text">
+        <h4 id="miniTitle">No Song</h4>
+        <p id="miniArtist">Select to play</p>
+      </div>
+    </div>
+    <div class="mini-controls" onclick="event.stopPropagation()">
+      <i class="fa-solid fa-backward-step" onclick="prevSong()"></i>
+      <i class="fa-solid fa-circle-play" id="miniPlayIcon" onclick="togglePlay()"></i>
+      <i class="fa-solid fa-forward-step" onclick="nextSong()"></i>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="navMusic" onclick="switchTab('music')"><i class="fa-solid fa-music"></i><span>Music</span></div>
+    <div class="nav-item" id="navLibrary" onclick="switchTab('library')"><i class="fa-solid fa-list-ul"></i><span>My Library</span></div>
+  </nav>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    function showToast(message) {
+      const toast = document.getElementById('customToast');
+      document.getElementById('toastMessage').innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 2500);
+    }
+
+    // Default songs list - each song can have multiple categories
+    let songsDatabase = [
+      { id: "B2KFkSkNllo", title: "", artist: "", type: "yt", ytId: "B2KFkSkNllo", categories: ["Recently Played", "Fresh Hits"] },
+      { id: "aBPIfN5fHO4", title: "Blank Space", artist: "Taylor Swift", type: "yt", ytId: "aBPIfN5fHO4", categories: ["Recently Played", "English Hits"] },
+      { id: "fKopy74weus", title: "", artist: "Jass Manak", type: "yt", ytId: "fKopy74weus", categories: ["Fresh Hits", "Punjabi"] },
+      { id: "k4yXQkGLeAA", title: "Paaro", artist: "Aditya Rikhari", type: "yt", ytId: "k4yXQkGLeAA", categories: ["Fresh Hits", "Romantic"] },
+      { id: "kJQP7kiw5Fk", title: "Despacito", artist: "Luis Fonsi", type: "yt", ytId: "kJQP7kiw5Fk", categories: ["Top Genres & Moods"] }
+    ];
+
+    let currentDetailSongs = [];
+    let currentSongIndex = 0;
+    let isMiniPlaying = false;
+    let homePlayer = null;
+
+    // Load saved database if present
+    const savedDb = localStorage.getItem('customSongsDB');
+    if (savedDb) {
+      try { songsDatabase = JSON.parse(savedDb); } catch(e){}
+    }
+
+    /* Auto fetch title and artist using YouTube oEmbed */
+    async function autoFetchMetadata(song) {
+      if (song.title && song.artist) return song;
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${song.ytId}`);
+        const data = await res.json();
+        if (data && data.title) {
+          if (!song.title) song.title = data.title;
+          if (!song.artist) song.artist = data.author_name || "YouTube Artist";
+        }
+      } catch(e) {
+        if (!song.title) song.title = `YouTube Track (${song.ytId})`;
+        if (!song.artist) song.artist = "YouTube Music";
+      }
+      return song;
+    }
+
+    async function ensureMetadata() {
+      for (let s of songsDatabase) {
+        await autoFetchMetadata(s);
+      }
+      localStorage.setItem('customSongsDB', JSON.stringify(songsDatabase));
+      renderAllCategories();
+      renderArtists();
+    }
+
+    /* YouTube Iframe for Home background playback */
+    function onYouTubeIframeAPIReady() {
+      const active = JSON.parse(localStorage.getItem('activeSong')) || songsDatabase[0];
+      homePlayer = new YT.Player('homeYtPlayer', {
+        height: '200', width: '200',
+        videoId: active.ytId,
+        playerVars: { 'autoplay': 0, 'controls': 0, 'playsinline': 1 },
+        events: {
+          'onStateChange': (e) => {
+            const icon = document.getElementById('miniPlayIcon');
+            if (e.data === YT.PlayerState.PLAYING) {
+              isMiniPlaying = true;
+              icon.className = "fa-solid fa-circle-pause";
+            } else {
+              isMiniPlaying = false;
+              icon.className = "fa-solid fa-circle-play";
+            }
+          }
+        }
+      });
+    }
+
+    /* Render Categories Dynamically */
+    function renderAllCategories() {
+      const container = document.getElementById('dynamicCategoriesContainer');
+      container.innerHTML = '';
+
+      // Collect all unique categories
+      const categoryMap = {};
+      songsDatabase.forEach(song => {
+        const cats = song.categories || [song.category || "General"];
+        cats.forEach(c => {
+          if (!categoryMap[c]) categoryMap[c] = [];
+          categoryMap[c].push(song);
+        });
+      });
+
+      Object.keys(categoryMap).forEach(catName => {
+        const songs = categoryMap[catName];
+        let songsHtml = '';
+        songs.forEach(song => {
+          const thumb = `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`;
+          songsHtml += `
+            <div class="song-card" onclick="selectSongDirect('${song.ytId}')">
+              <div class="thumb-wrapper">
+                <img src="${thumb}" alt="${song.title}">
+                <div class="play-overlay"><i class="fa-solid fa-play"></i></div>
+              </div>
+              <div class="song-title">${song.title}</div>
+              <div class="song-artist">${song.artist}</div>
+            </div>
+          `;
+        });
+
+        const sectionHtml = `
+          <div class="section-wrapper">
+            <div class="section-title">
+              <span>${catName}</span>
+              <button class="view-all-btn" onclick="openCategoryAll('${encodeURIComponent(catName)}')">All <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="horizontal-scroll">${songsHtml}</div>
+          </div>
+        `;
+        container.innerHTML += sectionHtml;
+      });
+    }
+
+    /* Auto Artist Profiles */
+    function renderArtists() {
+      const list = document.getElementById('artistsList');
+      list.innerHTML = '';
+      const artistMap = {};
+
+      songsDatabase.forEach(song => {
+        const artist = song.artist || "Unknown";
+        if (!artistMap[artist]) artistMap[artist] = [];
+        artistMap[artist].push(song);
+      });
+
+      Object.keys(artistMap).forEach(artistName => {
+        const firstSong = artistMap[artistName][0];
+        const thumb = `https://i.ytimg.com/vi/${firstSong.ytId}/hqdefault.jpg`;
+        list.innerHTML += `
+          <div class="artist-card" onclick="openArtistAll('${encodeURIComponent(artistName)}')">
+            <div class="artist-avatar"><img src="${thumb}" alt="${artistName}"></div>
+            <div class="artist-name">${artistName}</div>
+          </div>
+        `;
+      });
+    }
+
+    /* Open Category "All" Modal */
+    function openCategoryAll(catEncoded) {
+      const catName = decodeURIComponent(catEncoded);
+      const filtered = songsDatabase.filter(s => (s.categories && s.categories.includes(catName)) || s.category === catName);
+      showDetailView(catName, filtered);
+    }
+
+    /* Open Artist "All" Modal */
+    function openArtistAll(artistEncoded) {
+      const artistName = decodeURIComponent(artistEncoded);
+      const filtered = songsDatabase.filter(s => s.artist === artistName);
+      showDetailView(`Artist: ${artistName}`, filtered);
+    }
+
+    function showDetailView(title, songs) {
+      currentDetailSongs = songs;
+      document.getElementById('detailViewTitle').innerText = title;
+      const container = document.getElementById('detailSongsContainer');
+      container.innerHTML = '';
+
+      songs.forEach((song, idx) => {
+        const thumb = `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`;
+        container.innerHTML += `
+          <div class="song-row" onclick="playFromDetailList(${idx})">
+            <div class="song-row-left">
+              <img src="${thumb}">
+              <div class="song-row-text">
+                <h4>${song.title}</h4>
+                <p>${song.artist}</p>
+              </div>
+            </div>
+            <i class="fa-solid fa-circle-play" style="color:var(--primary); font-size:1.4rem;"></i>
+          </div>
+        `;
+      });
+
+      document.getElementById('detailOverlay').style.display = 'flex';
+    }
+
+    function closeDetailOverlay() {
+      document.getElementById('detailOverlay').style.display = 'none';
+    }
+
+    function playCurrentDetailList() {
+      if (currentDetailSongs.length > 0) {
+        playFromDetailList(0);
+      }
+    }
+
+    function playFromDetailList(idx) {
+      selectSong(idx, currentDetailSongs);
+    }
+
+    function selectSongDirect(ytId) {
+      const idx = songsDatabase.findIndex(s => s.ytId === ytId);
+      if (idx !== -1) selectSong(idx, songsDatabase);
+    }
+
+    /* Song Selection & Playback with sound */
+    function selectSong(index, list = songsDatabase) {
+      currentSongIndex = index;
+      const song = list[index];
+      localStorage.setItem('activeSong', JSON.stringify(song));
+      localStorage.setItem('playlist', JSON.stringify(list));
+      localStorage.setItem('currentSongIndex', index);
+
+      updateMiniPlayer(song);
+
+      if (homePlayer && homePlayer.loadVideoById) {
+        homePlayer.loadVideoById(song.ytId);
+        homePlayer.unMute();
+        homePlayer.playVideo();
+      }
+      isMiniPlaying = true;
+      document.getElementById('miniPlayIcon').className = "fa-solid fa-circle-pause";
+    }
+
+    function updateMiniPlayer(song) {
+      if (!song) return;
+      document.getElementById('miniTitle').innerText = song.title || "Playing";
+      document.getElementById('miniArtist').innerText = song.artist || "YouTube";
+      document.getElementById('miniThumb').src = `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`;
+    }
+
+    function togglePlay() {
+      if (!homePlayer) return;
+      if (isMiniPlaying) {
+        homePlayer.pauseVideo();
+      } else {
+        homePlayer.unMute();
+        homePlayer.playVideo();
+      }
+    }
+
+    function nextSong() {
+      const queue = JSON.parse(localStorage.getItem('playlist')) || songsDatabase;
+      currentSongIndex = (currentSongIndex + 1) % queue.length;
+      selectSong(currentSongIndex, queue);
+    }
+
+    function prevSong() {
+      const queue = JSON.parse(localStorage.getItem('playlist')) || songsDatabase;
+      currentSongIndex = (currentSongIndex - 1 + queue.length) % queue.length;
+      selectSong(currentSongIndex, queue);
+    }
+
+    function openFullPlayer() {
+      window.location.href = 'player.html';
+    }
+
+    async function playDirectUrl() {
+      const input = document.getElementById('directUrl').value.trim();
+      if (!input) { showToast('Please enter YouTube ID or Link!'); return; }
+      const ytId = extractYouTubeID(input) || input;
+      let newSong = { id: ytId, ytId: ytId, title: '', artist: '', categories: ["Fresh Hits", "Recently Played"], type: 'yt' };
+      newSong = await autoFetchMetadata(newSong);
+
+      songsDatabase.unshift(newSong);
+      localStorage.setItem('customSongsDB', JSON.stringify(songsDatabase));
+      renderAllCategories();
+      renderArtists();
+      selectSong(0, songsDatabase);
+      document.getElementById('directUrl').value = '';
+    }
+
+    function extractYouTubeID(url) {
+      const reg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(reg);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function handleSearch() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.song-card').forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(q) ? 'block' : 'none';
+      });
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('contentSections').style.display = 'none';
+      document.getElementById('librarySection').style.display = 'none';
+      document.getElementById('detailOverlay').style.display = 'none';
+
+      if (tab === 'music') {
+        document.getElementById('navMusic').classList.add('active');
+        document.getElementById('contentSections').style.display = 'block';
+      } else if (tab === 'library') {
+        document.getElementById('navLibrary').classList.add('active');
+        document.getElementById('librarySection').style.display = 'block';
+        renderPlaylists();
+      }
+    }
+
+    function renderPlaylists() {
+      const playlists = JSON.parse(localStorage.getItem('myPlaylists')) || { "Favorites": [songsDatabase[0]] };
+      const container = document.getElementById('allPlaylistsContainer');
+      container.innerHTML = '';
+      Object.keys(playlists).forEach(name => {
+        container.innerHTML += `
+          <div class="playlist-item" onclick="openPlaylistSongs('${name}')">
+            <div class="playlist-info">
+              <h4>${name}</h4>
+              <p>${playlists[name].length} Songs</p>
+            </div>
+            <i class="fa-solid fa-play" style="color:var(--primary);"></i>
+          </div>
+        `;
+      });
+    }
+
+    function openPlaylistSongs(name) {
+      const playlists = JSON.parse(localStorage.getItem('myPlaylists')) || {};
+      showDetailView(`Playlist: ${name}`, playlists[name] || []);
+    }
+
+    window.onload = () => {
+      ensureMetadata();
+      const active = JSON.parse(localStorage.getItem('activeSong')) || songsDatabase[0];
+      updateMiniPlayer(active);
+    };
+  </script>
+</body>
+</html>

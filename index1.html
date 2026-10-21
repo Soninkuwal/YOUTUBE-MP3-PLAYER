@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Home - JioSaavn Style</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: gold;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: green;
+      --subtext: red;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
+    
+    header {
+      position: sticky; top: 0; background: #fff; z-index: 10;
+      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .brand { font-size: 1.25rem; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
+    .brand i { color: var(--primary); }
+    .header-icons { display: flex; gap: 16px; font-size: 1.2rem; color: var(--subtext); }
+
+    .search-section { padding: 16px; background: #fff; border-bottom: 1px solid #edf2f7; }
+    .search-box {
+      display: flex; align-items: center; background: #f1f5f9;
+      border-radius: 25px; padding: 8px 16px; gap: 10px;
+    }
+    .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.95rem; }
+    
+    .direct-input-box { margin-top: 10px; display: flex; gap: 8px; }
+    .direct-input-box input { flex: 1; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; outline: none; }
+    .direct-input-box button { background: var(--primary); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+    .section-title { font-size: 1.15rem; font-weight: 700; padding: 18px 16px 8px; display: flex; justify-content: space-between; }
+    .horizontal-scroll { display: flex; overflow-x: auto; gap: 14px; padding: 0 16px 12px; scrollbar-width: none; }
+    .horizontal-scroll::-webkit-scrollbar { display: none; }
+    
+    .song-card { min-width: 130px; max-width: 130px; position: relative; cursor: pointer; }
+    .thumb-wrapper { position: relative; width: 130px; height: 130px; border-radius: 12px; overflow: hidden; background: #e2e8f0; }
+    .thumb-wrapper img { width: 100%; height: 100%; object-fit: fill; }
+    .thumb-wrapper .play-overlay {
+      position: absolute; bottom: 2px; right: 2px; background: var(--text);
+      color: var(--primary); width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+    }
+    .song-title { font-size: 0.85rem; font-weight: 600; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-artist { font-size: 0.75rem; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Library Screen */
+    #librarySection { display: none; padding: 16px; }
+    .playlist-item {
+      background: #fff; padding: 14px; border-radius: 12px; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: pointer;
+    }
+    .playlist-info h4 { font-size: 1rem; color: #1e293b; }
+    .playlist-info p { font-size: 0.8rem; color: var(--subtext); }
+
+    /* Playlist detail modal / view */
+    #playlistDetailView { display: none; padding: 16px; }
+    .song-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #e2e8f0; cursor: pointer;
+    }
+
+    /* Mini Player */
+    .mini-player {
+      position: fixed; bottom: 58px; left: 0; right: 0; background: var(--primary);
+      color: #fff; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; z-index: 99; cursor: pointer;
+    }
+    .mini-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .mini-info img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+    .mini-text { overflow: hidden; }
+    .mini-text h4 { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-text p { font-size: 0.7rem; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-controls { display: flex; gap: 16px; font-size: 1.2rem; align-items: center; }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: #fff; height: 58px;
+      display: flex; border-top: 1px solid #e2e8f0; z-index: 100;
+    }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--subtext); text-decoration: none; gap: 3px; cursor: pointer; }
+    .nav-item.active { color: var(--primary); font-weight: 600; }
+    .nav-item i { font-size: 1rem; }
+
+    /* Custom Toast Popup */
+    .custom-toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-30px);
+      background: #1e293b; color: #fff; padding: 12px 22px; border-radius: 30px;
+      font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25); opacity: 0; pointer-events: none;
+      transition: all 0.3s ease; z-index: 9999;
+    }
+    .custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Alert Toast -->
+  <div class="custom-toast" id="customToast">
+    <i class="fa-solid fa-circle-info" style="color:var(--primary);"></i>
+    <span id="toastMessage">Notification</span>
+  </div>
+
+  <header>
+    <div class="brand"><i class="fa-brands fa-spotify"></i> JioSaavn</div>
+    <div class="header-icons">
+      <!-- <i class="fa-solid fa-shapes"></i> -->
+      <!-- <i class="fa-solid fa-bell"></i> -->
+    </div>
+  </header>
+
+  <div class="search-section" id="searchBarWrapper">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
+      <input type="text" id="searchInput" placeholder="Search song or artist..." oninput="handleSearch()">
+    </div>
+    <div class="direct-input-box">
+      <input type="text" id="directUrl" placeholder="Paste YouTube link or MP3 URL">
+      <button onclick="playDirectUrl()"><i class="fa-solid fa-play"></i> Play</button>
+    </div>
+  </div>
+
+  <!-- Music Home View -->
+  <div id="contentSections">
+    <div class="section-title"><span>Recently Played</span></div>
+    <div class="horizontal-scroll" id="recentList"></div>
+
+    <div class="section-title"><span>Fresh Hits</span></div>
+    <div class="horizontal-scroll" id="freshList"></div>
+
+    <div class="section-title"><span>Top Genres & Moods</span></div>
+    <div class="horizontal-scroll" id="genreList"></div>
+  </div>
+
+  <!-- My Library View -->
+  <div id="librarySection">
+    <h2 style="margin-bottom:14px;">My Playlists</h2>
+    <div id="allPlaylistsContainer"></div>
+  </div>
+
+  <!-- Playlist Song Detail View -->
+  <div id="playlistDetailView">
+    <button onclick="backToPlaylists()" style="border:none; background:none; color:var(--primary); font-weight:bold; margin-bottom:15px; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Back to Playlists</button>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 id="currentPlaylistTitle">Playlist Name</h2>
+      <button onclick="playEntirePlaylist()" style="padding:6px 14px; background:var(--primary); color:#fff; border:none; border-radius:20px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-play"></i> Play All</button>
+    </div>
+    <div id="playlistSongsList" style="margin-top:15px;"></div>
+  </div>
+
+  <!-- Mini Player -->
+  <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
+    <div class="mini-info">
+      <img id="miniThumb" src="" alt="Thumb">
+      <div class="mini-text">
+        <h4 id="miniTitle">No Song</h4>
+        <p id="miniArtist">Select to play</p>
+      </div>
+    </div>
+    <div class="mini-controls" onclick="event.stopPropagation()">
+      <i class="fa-solid fa-backward-step" onclick="prevSong()"></i>
+      <i class="fa-solid fa-circle-play" id="miniPlayIcon" onclick="togglePlay()"></i>
+      <i class="fa-solid fa-forward-step" onclick="nextSong()"></i>
+    </div>
+  </div>
+
+  <!-- Bottom App Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="navMusic" onclick="switchTab('music')"><i class="fa-solid fa-music"></i><span>Music</span></div>
+    <!-- <div class="nav-item" id="navTunes" onclick="switchTab('tunes')"><i class="fa-solid fa-record-vinyl"></i><span>JioTunes</span></div> -->
+    <div class="nav-item" id="navLibrary" onclick="switchTab('library')"><i class="fa-solid fa-user"></i><span>My Library</span></div>
+    <!-- <div class="nav-item" id="navPro" onclick="switchTab('pro')"><i class="fa-solid fa-crown"></i><span>Pro</span></div> -->
+  </nav>
+
+  <script>
+    function showToast(message) {
+      const toast = document.getElementById('customToast');
+      document.getElementById('toastMessage').innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    const songsDatabase = [
+      { id: "B2KFkSkNllo", title: "Meri Maa", artist: "meena geet, k r Devta", type: "yt", ytId: "B2KFkSkNllo", category: "recent" },
+      { id: "aBPIfN5fHO4", title: "Blank Space", artist: "Taylor Swift", type: "yt", ytId: "aBPIfN5fHO4", category: "recent" },
+      { id: "fKopy74weus", title: "Girlfriend", artist: "Jass Manak - Age 19", type: "yt", ytId: "fKopy74weus", category: "fresh" },
+      { id: "k4yXQkGLeAA", title: "Paaro", artist: "Aditya Rikhari", type: "yt", ytId: "k4yXQkGLeAA", category: "fresh" },
+      { id: "kJQP7kiw5Fk", title: "Despacito", artist: "Luis Fonsi", type: "yt", ytId: "kJQP7kiw5Fk", category: "genre" }
+    ];
+
+    let currentPlaylistSongs = [];
+    let currentSongIndex = 0;
+    let isMiniPlaying = false;
+
+    function renderSongs() {
+      const recentList = document.getElementById('recentList');
+      const freshList = document.getElementById('freshList');
+      const genreList = document.getElementById('genreList');
+      recentList.innerHTML = ''; freshList.innerHTML = ''; genreList.innerHTML = '';
+
+      songsDatabase.forEach((song, idx) => {
+        const thumb = `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`;
+        const cardHtml = `
+          <div class="song-card" onclick="selectSong(${idx})">
+            <div class="thumb-wrapper">
+              <img src="${thumb}" alt="${song.title}">
+              <div class="play-overlay"><i class="fa-solid fa-play"></i></div>
+            </div>
+            <div class="song-title">${song.title}</div>
+            <div class="song-artist">${song.artist}</div>
+          </div>
+        `;
+        if (song.category === 'recent') recentList.innerHTML += cardHtml;
+        else if (song.category === 'fresh') freshList.innerHTML += cardHtml;
+        else genreList.innerHTML += cardHtml;
+      });
+    }
+
+    function selectSong(index, customList = null) {
+      const list = customList || songsDatabase;
+      currentSongIndex = index;
+      const song = list[index];
+      localStorage.setItem('activeSong', JSON.stringify(song));
+      localStorage.setItem('playlist', JSON.stringify(list));
+      localStorage.setItem('currentSongIndex', index);
+      updateMiniPlayer(song);
+      isMiniPlaying = true;
+      document.getElementById('miniPlayIcon').className = "fa-solid fa-circle-pause";
+      openFullPlayer();
+    }
+
+    function updateMiniPlayer(song) {
+      if (!song) return;
+      document.getElementById('miniTitle').innerText = song.title;
+      document.getElementById('miniArtist').innerText = song.artist;
+      document.getElementById('miniThumb').src = `https://i.ytimg.com/vi/${song.ytId}/hqdefault.jpg`;
+    }
+
+    function togglePlay() {
+      isMiniPlaying = !isMiniPlaying;
+      const icon = document.getElementById('miniPlayIcon');
+      if (isMiniPlaying) {
+        icon.className = "fa-solid fa-circle-pause";
+        openFullPlayer();
+      } else {
+        icon.className = "fa-solid fa-circle-play";
+      }
+    }
+
+    function nextSong() {
+      const storedQueue = JSON.parse(localStorage.getItem('playlist')) || songsDatabase;
+      currentSongIndex = (currentSongIndex + 1) % storedQueue.length;
+      selectSong(currentSongIndex, storedQueue);
+    }
+
+    function prevSong() {
+      const storedQueue = JSON.parse(localStorage.getItem('playlist')) || songsDatabase;
+      currentSongIndex = (currentSongIndex - 1 + storedQueue.length) % storedQueue.length;
+      selectSong(currentSongIndex, storedQueue);
+    }
+
+    function openFullPlayer() {
+      window.location.href = 'player.html';
+    }
+
+    function playDirectUrl() {
+      const url = document.getElementById('directUrl').value.trim();
+      if (!url) {
+        showToast('Please enter a valid URL!');
+        return;
+      }
+      let ytId = extractYouTubeID(url);
+      let customSong = ytId 
+        ? { id: ytId, title: "YouTube Stream", artist: "Direct Video", type: "yt", ytId: ytId }
+        : { id: "direct_mp3", title: "Custom Audio", artist: "Audio Source", type: "mp3", src: url, ytId: "B2KFkSkNllo" };
+
+      localStorage.setItem('activeSong', JSON.stringify(customSong));
+      localStorage.setItem('playlist', JSON.stringify([customSong]));
+      localStorage.setItem('currentSongIndex', 0);
+      window.location.href = 'player.html';
+    }
+
+    function extractYouTubeID(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function handleSearch() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.song-card');
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(q) ? 'block' : 'none';
+      });
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('contentSections').style.display = 'none';
+      document.getElementById('librarySection').style.display = 'none';
+      document.getElementById('playlistDetailView').style.display = 'none';
+      document.getElementById('searchBarWrapper').style.display = 'none';
+
+      if (tab === 'music') {
+        document.getElementById('navMusic').classList.add('active');
+        document.getElementById('contentSections').style.display = 'block';
+        document.getElementById('searchBarWrapper').style.display = 'block';
+      } else if (tab === 'library') {
+        document.getElementById('navLibrary').classList.add('active');
+        document.getElementById('librarySection').style.display = 'block';
+        renderPlaylists();
+      } else {
+        showToast(tab.toUpperCase() + ' section coming soon!');
+        switchTab('music');
+      }
+    }
+
+    function renderPlaylists() {
+      const playlists = JSON.parse(localStorage.getItem('myPlaylists')) || {
+        "Favorites": [songsDatabase[0], songsDatabase[1]]
+      };
+      const container = document.getElementById('allPlaylistsContainer');
+      container.innerHTML = '';
+      
+      const names = Object.keys(playlists);
+      if (names.length === 0) {
+        container.innerHTML = '<p style="color:#64748b; margin-top:20px;">No playlists found. Create one from the player menu!</p>';
+        return;
+      }
+
+      names.forEach(name => {
+        const count = playlists[name].length;
+        container.innerHTML += `
+          <div class="playlist-item" onclick="openPlaylistDetails('${name}')">
+            <div class="playlist-info">
+              <h4><i class="fa-solid fa-list-music" style="color:var(--primary); margin-right:8px;"></i> ${name}</h4>
+              <p>${count} Songs</p>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color:#94a3b8;"></i>
+          </div>
+        `;
+      });
+    }
+
+    function openPlaylistDetails(name) {
+      const playlists = JSON.parse(localStorage.getItem('myPlaylists')) || {};
+      currentPlaylistSongs = playlists[name] || [];
+      document.getElementById('librarySection').style.display = 'none';
+      document.getElementById('playlistDetailView').style.display = 'block';
+      document.getElementById('currentPlaylistTitle').innerText = name;
+
+      const listContainer = document.getElementById('playlistSongsList');
+      listContainer.innerHTML = '';
+
+      if (currentPlaylistSongs.length === 0) {
+        listContainer.innerHTML = '<p style="color:#64748b;">No songs in this playlist.</p>';
+        return;
+      }
+
+      currentPlaylistSongs.forEach((song, idx) => {
+        listContainer.innerHTML += `
+          <div class="song-list-item" onclick="playPlaylistSong(${idx})">
+            <div>
+              <strong>${song.title}</strong>
+              <div style="font-size:0.75rem; color:#64748b;">${song.artist}</div>
+            </div>
+            <i class="fa-solid fa-play" style="color:var(--primary)"></i>
+          </div>
+        `;
+      });
+    }
+
+    function playPlaylistSong(index) {
+      selectSong(index, currentPlaylistSongs);
+    }
+
+    function playEntirePlaylist() {
+      if (currentPlaylistSongs.length > 0) {
+        selectSong(0, currentPlaylistSongs);
+      }
+    }
+
+    function backToPlaylists() {
+      document.getElementById('playlistDetailView').style.display = 'none';
+      document.getElementById('librarySection').style.display = 'block';
+      renderPlaylists();
+    }
+
+    window.onload = () => {
+      renderSongs();
+      const active = JSON.parse(localStorage.getItem('activeSong')) || songsDatabase[0];
+      updateMiniPlayer(active);
+    };
+  </script>
+</body>
+</html>
