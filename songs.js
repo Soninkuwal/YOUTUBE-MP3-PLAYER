@@ -9,7 +9,12 @@ window.songsDatabase = [
       { id: "ZddA4b8rj5g", title: "", artist: "", type: "yt", ytId: "ZddA4b8rj5g", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
       
       // singer golu bhairav
-      { id: "ZddA4b8rj5g", title: "", artist: "", type: "yt", ytId: "-J0VX_dpkz0", categories: ["singer golu bhairav", "Meena Geet"] },
+      { id: "-J0VX_dpkz0", title: "", artist: "", type: "yt", ytId: "-J0VX_dpkz0", categories: ["singer golu bhairav", "Meena Geet"] },
+      { id: "aO1vvwhAbsw", title: "", artist: "", type: "yt", ytId: "aO1vvwhAbsw", categories: ["singer golu bhairav", "Meena Geet"] },
+      { id: "0o7cUtgZHf0", title: "", artist: "", type: "yt", ytId: "0o7cUtgZHf0", categories: ["singer golu bhairav", "Meena Geet"] },
+      { id: "GHRSXfgqki8", title: "", artist: "", type: "yt", ytId: "GHRSXfgqki8", categories: ["singer golu bhairav", "Meena Geet"] },
+      { id: "xNKR0hGhTDM", title: "", artist: "", type: "yt", ytId: "xNKR0hGhTDM", categories: ["singer golu bhairav", "Meena Geet"] },
+      { id: "lxhV3vKv7as", title: "", artist: "", type: "yt", ytId: "lxhV3vKv7as", categories: ["singer golu bhairav", "Meena Geet"] },
       
       { id: "NE3SWh9_vR4", title: "", artist: "", type: "yt", ytId: "NE3SWh9_vR4", categories: ["Aarti", "Good"] },
       { id: "3ucCEjXS9n8", title: "", artist: "", type: "yt", ytId: "3ucCEjXS9n8", categories: ["Aarti", "Good"] },
