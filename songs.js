@@ -1,11 +1,15 @@
 // Kuwal Music Songs Database
 window.songsDatabase = [
+      // singer Vishnu Kuagoan
       { id: "fSUdV70myUw", title: "", artist: "", type: "yt", ytId: "fSUdV70myUw", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
       { id: "wnyDgh7bjOU", title: "", artist: "", type: "yt", ytId: "wnyDgh7bjOU", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
       { id: "kYiau8fy0rA", title: "", artist: "", type: "yt", ytId: "kYiau8fy0rA", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
       { id: "fjLvdDJIU00", title: "", artist: "", type: "yt", ytId: "fjLvdDJIU00", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
       { id: "4IBByX01wYI", title: "", artist: "", type: "yt", ytId: "4IBByX01wYI", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
       { id: "ZddA4b8rj5g", title: "", artist: "", type: "yt", ytId: "ZddA4b8rj5g", categories: ["singer Vishnu Kuagoan", "Meena Geet"] },
+      
+      // singer golu bhairav
+      { id: "ZddA4b8rj5g", title: "", artist: "", type: "yt", ytId: "-J0VX_dpkz0", categories: ["singer golu bhairav", "Meena Geet"] },
       
       { id: "NE3SWh9_vR4", title: "", artist: "", type: "yt", ytId: "NE3SWh9_vR4", categories: ["Aarti", "Good"] },
       { id: "3ucCEjXS9n8", title: "", artist: "", type: "yt", ytId: "3ucCEjXS9n8", categories: ["Aarti", "Good"] },
